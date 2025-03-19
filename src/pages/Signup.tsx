@@ -11,7 +11,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const signupSchema = z.object({
@@ -24,7 +23,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
+  const { signup, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -40,35 +39,10 @@ const Signup = () => {
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true);
     try {
-      // Create the user in Supabase
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Account created successfully!",
-        description: "Please check your email to verify your account.",
-      });
-
-      // Log the user in after signup
-      await login(data.email, data.password);
-      navigate("/");
+      await signup(data.email, data.password, data.name);
+      navigate("/login");
     } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.message || "An error occurred during signup",
-        variant: "destructive",
-      });
+      console.error("Signup error:", error);
     } finally {
       setIsSubmitting(false);
     }

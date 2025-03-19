@@ -16,6 +16,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,6 +75,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const signup = async (email: string, password: string, name: string) => {
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Account created successfully!",
+        description: "Please check your email to verify your account before logging in.",
+      });
+      
+      return;
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.message || "An error occurred during signup",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
@@ -83,7 +118,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your email inbox and confirm your email address before logging in.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
       
       toast({
         title: "Login successful",
@@ -126,7 +172,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated: !!user, 
       isLoading, 
       login, 
-      logout 
+      logout,
+      signup
     }}>
       {children}
     </AuthContext.Provider>
