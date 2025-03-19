@@ -1,64 +1,98 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from '@supabase/supabase-js';
 
-type User = {
+type UserData = {
   id: string;
   email: string;
   name: string;
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Initialize the auth state with the current session
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      
+      if (session?.user) {
+        const { id, email, user_metadata } = session.user;
+        setUser({
+          id,
+          email: email || '',
+          name: user_metadata?.name || email?.split('@')[0] || '',
+        });
+      }
+      
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          const { id, email, user_metadata } = session.user;
+          setUser({
+            id,
+            email: email || '',
+            name: user_metadata?.name || email?.split('@')[0] || '',
+          });
+        } else {
+          setUser(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Clean up subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
-      // For demo purposes - simple validation
-      if (email && password.length >= 6) {
-        // Mock login - in a real app, this would call an API
-        const mockUser = {
-          id: '1',
-          email,
-          name: email.split('@')[0],
-        };
-        
-        // Save user to localStorage
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome to Shoevana!",
-        });
-      } else {
-        throw new Error('Invalid credentials');
-      }
-    } catch (error) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome to Shoevana!",
+      });
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials",
+        description: error.message || "Please check your credentials",
         variant: "destructive",
       });
       throw error;
@@ -67,13 +101,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    toast({
-      title: "Logged out",
-      description: "You have been logged out",
-    });
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been logged out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message || "There was a problem logging out",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
