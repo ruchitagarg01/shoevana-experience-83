@@ -4,10 +4,12 @@ import { ShoppingBag, Search, Menu, X, User, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import SearchDialog from './SearchDialog';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -57,14 +59,17 @@ const Navbar = () => {
             <Link to="/women" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
               Women
             </Link>
-            <Link to="/collections" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
-              Collections
+            <Link to="/browse" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
+              Shop All
             </Link>
           </nav>
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-full hover:bg-secondary transition-colors">
+            <button 
+              className="p-2 rounded-full hover:bg-secondary transition-colors"
+              onClick={() => setIsSearchOpen(true)}
+            >
               <Search className="h-5 w-5" />
             </button>
             {isAuthenticated ? (
@@ -109,7 +114,7 @@ const Navbar = () => {
             <Link to="/new-arrivals" className="block py-2 text-sm font-medium">New Arrivals</Link>
             <Link to="/men" className="block py-2 text-sm font-medium">Men</Link>
             <Link to="/women" className="block py-2 text-sm font-medium">Women</Link>
-            <Link to="/collections" className="block py-2 text-sm font-medium">Collections</Link>
+            <Link to="/browse" className="block py-2 text-sm font-medium">Shop All</Link>
             <div className="pt-4">
               {isAuthenticated ? (
                 <div className="space-y-2">
@@ -127,6 +132,9 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* Search Dialog */}
+      <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </header>
   );
 };
