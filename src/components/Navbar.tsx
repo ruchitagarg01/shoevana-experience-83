@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ShoppingBag, Search, Menu, X, User, LogOut, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/contexts/CartContext"; 
 import { Link, useNavigate } from "react-router-dom";
 import SearchDialog from "./SearchDialog";
 
@@ -85,7 +85,7 @@ const Navbar = () => {
             >
               <Truck className="h-5 w-5" />
             </button>
-            {/* Cart Icon */}
+            {/* Cart Icon - FIXED: changed onClick to handleCartClick */}
             <button className="p-2 rounded-full hover:bg-secondary transition-colors relative" onClick={handleCartClick}>
               <ShoppingBag className="h-5 w-5" />
               {cartItems.length > 0 && (

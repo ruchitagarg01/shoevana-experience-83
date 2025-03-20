@@ -5,6 +5,7 @@ import { getProductById } from '@/lib/products';
 import { ShoppingBag, Heart, Share2, ArrowLeft, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/contexts/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -12,6 +13,7 @@ const SingleProduct = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const product = getProductById(id || '');
   
   const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');
@@ -31,6 +33,16 @@ const SingleProduct = () => {
   }
 
   const handleAddToCart = () => {
+    // Create cart item from product and add it to cart
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.salePrice || product.price,
+      quantity: quantity
+    };
+    
+    addToCart(cartItem);
+    
     toast({
       title: "Added to cart",
       description: `${product.name} (${selectedColor}) has been added to your cart.`,

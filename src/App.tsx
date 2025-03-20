@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProductBrowser from "./pages/ProductBrowser";
 import SingleProduct from "./pages/SingleProduct";
+import Cart from "./pages/Cart";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/browse" element={<ProductBrowser />} />
             <Route path="/category/:category" element={<ProductBrowser />} />
             <Route path="/product/:id" element={<SingleProduct />} />
+            <Route path="/cart" element={<Cart />} />
             <Route path="/track-order" element={<NotFound />} /> {/* Placeholder until we create a tracking page */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

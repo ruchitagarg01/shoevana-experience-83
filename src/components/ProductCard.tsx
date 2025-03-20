@@ -4,6 +4,7 @@ import { ShoppingBag, Heart } from 'lucide-react';
 import { Product } from '@/lib/products';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
   product: Product;
@@ -11,10 +12,21 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
   const handleAddToCart = () => {
+    // Create cart item from product and add it to cart
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.salePrice || product.price,
+      quantity: 1
+    };
+    
+    addToCart(cartItem);
+    
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
@@ -148,7 +160,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <Button variant="default" size="lg" className="rounded-lg mb-2">
             Quick View
           </Button>
-          <Button variant="outline" size="lg" className="rounded-lg">
+          <Button onClick={handleAddToCart} variant="outline" size="lg" className="rounded-lg">
             <ShoppingBag className="h-4 w-4 mr-2" />
             Add to Cart
           </Button>
