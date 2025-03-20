@@ -1,33 +1,30 @@
 
-import { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, X, User, LogOut, Truck } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { ShoppingBag, Search, Menu, X, User, LogOut, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
-import SearchDialog from './SearchDialog';
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext"; // Import cart context
+import { Link, useNavigate } from "react-router-dom";
+import SearchDialog from "./SearchDialog";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { cartItems } = useCart(); // Get cart items from context
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLoginClick = () => {
-    navigate('/login');
+    navigate("/login");
     setIsMobileMenuOpen(false);
   };
 
@@ -36,14 +33,17 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const handleCartClick = () => {
+    navigate("/cart");
+  };
+
   const handleTrackOrderClick = () => {
-    // Will navigate to the order tracking page when implemented
-    navigate('/track-order');
+    navigate("/track-order");
     setIsMobileMenuOpen(false);
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 dark:bg-black/80 blur-backdrop shadow-sm' : 'bg-transparent'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white/80 dark:bg-black/80 blur-backdrop shadow-sm" : "bg-transparent"}`}>
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -53,51 +53,31 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
-              Home
-            </Link>
-            <Link to="/new-arrivals" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
-              New Arrivals
-            </Link>
-            <Link to="/men" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
-              Men
-            </Link>
-            <Link to="/women" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
-              Women
-            </Link>
-            <Link to="/browse" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">
-              Shop All
-            </Link>
+            <Link to="/" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">Home</Link>
+            <Link to="/new-arrivals" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">New Arrivals</Link>
+            <Link to="/men" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">Men</Link>
+            <Link to="/women" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">Women</Link>
+            <Link to="/browse" className="text-sm font-medium hover:opacity-70 transition-opacity relative story-link">Shop All</Link>
           </nav>
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            <button 
-              className="p-2 rounded-full hover:bg-secondary transition-colors"
-              onClick={() => setIsSearchOpen(true)}
-            >
+            <button className="p-2 rounded-full hover:bg-secondary transition-colors" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </button>
             {isAuthenticated ? (
               <div className="flex items-center">
-                <div className="hidden md:block mr-2 text-sm font-medium">
-                  Hi, {user?.name}
-                </div>
-                <button 
-                  className="p-2 rounded-full hover:bg-secondary transition-colors"
-                  onClick={handleLogoutClick}
-                >
+                <div className="hidden md:block mr-2 text-sm font-medium">Hi, {user?.name}</div>
+                <button className="p-2 rounded-full hover:bg-secondary transition-colors" onClick={handleLogoutClick}>
                   <LogOut className="h-5 w-5" />
                 </button>
               </div>
             ) : (
-              <button 
-                className="p-2 rounded-full hover:bg-secondary transition-colors"
-                onClick={handleLoginClick}
-              >
+              <button className="p-2 rounded-full hover:bg-secondary transition-colors" onClick={handleLoginClick}>
                 <User className="h-5 w-5" />
               </button>
             )}
+            {/* Track Order Icon */}
             <button 
               className="p-2 rounded-full hover:bg-secondary transition-colors"
               onClick={handleTrackOrderClick}
@@ -105,14 +85,16 @@ const Navbar = () => {
             >
               <Truck className="h-5 w-5" />
             </button>
-            <button className="p-2 rounded-full hover:bg-secondary transition-colors relative">
+            {/* Cart Icon */}
+            <button className="p-2 rounded-full hover:bg-secondary transition-colors relative" onClick={handleCartClick}>
               <ShoppingBag className="h-5 w-5" />
-              <span className="absolute top-0 right-0 h-4 w-4 bg-black text-white text-[10px] flex items-center justify-center rounded-full">0</span>
+              {cartItems.length > 0 && (
+                <span className="absolute top-0 right-0 h-4 w-4 bg-black text-white text-[10px] flex items-center justify-center rounded-full">
+                  {cartItems.length}
+                </span>
+              )}
             </button>
-            <button 
-              className="md:hidden p-2 rounded-full hover:bg-secondary transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
+            <button className="md:hidden p-2 rounded-full hover:bg-secondary transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
@@ -129,20 +111,7 @@ const Navbar = () => {
             <Link to="/women" className="block py-2 text-sm font-medium">Women</Link>
             <Link to="/browse" className="block py-2 text-sm font-medium">Shop All</Link>
             <Link to="/track-order" className="block py-2 text-sm font-medium">Track Order</Link>
-            <div className="pt-4">
-              {isAuthenticated ? (
-                <div className="space-y-2">
-                  <p className="text-sm">Signed in as {user?.name}</p>
-                  <Button className="w-full" onClick={handleLogoutClick}>
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
-                <Button className="w-full" onClick={handleLoginClick}>
-                  Sign In
-                </Button>
-              )}
-            </div>
+            <Link to="/cart" className="block py-2 text-sm font-medium">Cart</Link>
           </div>
         </div>
       )}
