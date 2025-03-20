@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, X, User, LogOut } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, User, LogOut, Truck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -33,6 +33,12 @@ const Navbar = () => {
 
   const handleLogoutClick = () => {
     logout();
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleTrackOrderClick = () => {
+    // Will navigate to the order tracking page when implemented
+    navigate('/track-order');
     setIsMobileMenuOpen(false);
   };
 
@@ -92,6 +98,13 @@ const Navbar = () => {
                 <User className="h-5 w-5" />
               </button>
             )}
+            <button 
+              className="p-2 rounded-full hover:bg-secondary transition-colors"
+              onClick={handleTrackOrderClick}
+              title="Track Order"
+            >
+              <Truck className="h-5 w-5" />
+            </button>
             <button className="p-2 rounded-full hover:bg-secondary transition-colors relative">
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute top-0 right-0 h-4 w-4 bg-black text-white text-[10px] flex items-center justify-center rounded-full">0</span>
@@ -115,6 +128,7 @@ const Navbar = () => {
             <Link to="/men" className="block py-2 text-sm font-medium">Men</Link>
             <Link to="/women" className="block py-2 text-sm font-medium">Women</Link>
             <Link to="/browse" className="block py-2 text-sm font-medium">Shop All</Link>
+            <Link to="/track-order" className="block py-2 text-sm font-medium">Track Order</Link>
             <div className="pt-4">
               {isAuthenticated ? (
                 <div className="space-y-2">

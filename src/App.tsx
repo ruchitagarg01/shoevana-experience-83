@@ -26,6 +26,7 @@ const App = () => (
           <Route path="/browse" element={<ProductBrowser />} />
           <Route path="/category/:category" element={<ProductBrowser />} />
           <Route path="/product/:id" element={<SingleProduct />} />
+          <Route path="/track-order" element={<NotFound />} /> {/* Placeholder until we create a tracking page */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
