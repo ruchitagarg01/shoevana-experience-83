@@ -85,7 +85,7 @@ const Navbar = () => {
             >
               <Truck className="h-5 w-5" />
             </button>
-            {/* Cart Icon - FIXED: changed onClick to handleCartClick */}
+            {/* Cart Icon */}
             <button className="p-2 rounded-full hover:bg-secondary transition-colors relative" onClick={handleCartClick}>
               <ShoppingBag className="h-5 w-5" />
               {cartItems.length > 0 && (
