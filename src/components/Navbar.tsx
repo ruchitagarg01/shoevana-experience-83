@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ShoppingBag, Search, Menu, X, User, LogOut, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext"; // Import cart context
+import { useCart } from "@/contexts/CartContext";
 import { Link, useNavigate } from "react-router-dom";
 import SearchDialog from "./SearchDialog";
 
@@ -11,7 +11,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { cartItems } = useCart(); // Get cart items from context
+  const { cartItems } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
