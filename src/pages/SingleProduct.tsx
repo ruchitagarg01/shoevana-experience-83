@@ -1,25 +1,32 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '@/lib/products';
-import { ShoppingBag, Heart, Share2, ArrowLeft, Star } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ReviewForm from '@/components/Reviews/ReviewForm';
+import ReviewList from '@/components/Reviews/ReviewList';
+import type { Review, ReviewFormData } from '@/types/review';
 
 const SingleProduct = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const product = getProductById(id || '');
   
   const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -32,8 +39,35 @@ const SingleProduct = () => {
     );
   }
 
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('product_reviews')
+          .select('*')
+          .eq('product_id', id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setReviews(data || []);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load reviews",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
+
   const handleAddToCart = () => {
-    // Create cart item from product and add it to cart
     const cartItem = {
       id: product.id,
       name: product.name,
@@ -57,6 +91,29 @@ const SingleProduct = () => {
     });
   };
 
+  const handleReviewSubmit = async (data: ReviewFormData) => {
+    if (!id || !user) return;
+
+    const { error } = await supabase
+      .from('product_reviews')
+      .insert({
+        product_id: id,
+        user_id: user.id,
+        rating: data.rating,
+        review_text: data.review_text,
+      });
+
+    if (error) throw error;
+
+    const { data: newReviews } = await supabase
+      .from('product_reviews')
+      .select('*')
+      .eq('product_id', id)
+      .order('created_at', { ascending: false });
+
+    setReviews(newReviews || []);
+  };
+
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -69,12 +126,15 @@ const SingleProduct = () => {
       }).format(product.salePrice)
     : null;
 
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
+    : 0;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 md:px-6">
-          {/* Breadcrumb */}
           <div className="mb-6 flex items-center text-sm text-muted-foreground">
             <button onClick={() => navigate(-1)} className="flex items-center hover:text-foreground">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -96,7 +156,6 @@ const SingleProduct = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Product Images */}
             <div className="space-y-4">
               <div className="aspect-square bg-secondary rounded-xl overflow-hidden">
                 <img
@@ -106,7 +165,6 @@ const SingleProduct = () => {
                 />
               </div>
               
-              {/* Image Thumbnails - This would be replaced with multiple images in a real product */}
               <div className="grid grid-cols-4 gap-2">
                 {Array(4).fill(0).map((_, index) => (
                   <div 
@@ -123,7 +181,6 @@ const SingleProduct = () => {
               </div>
             </div>
             
-            {/* Product Details */}
             <div>
               {product.isNew && (
                 <div className="inline-block bg-black text-white px-3 py-1 text-xs font-semibold rounded-full mb-4">
@@ -254,6 +311,49 @@ const SingleProduct = () => {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+          
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+            
+            {reviews.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-5 w-5 ${
+                          star <= Math.round(averageRating)
+                            ? "text-yellow-400 fill-current"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-lg font-medium">
+                    {averageRating.toFixed(1)} out of 5
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Based on {reviews.length} reviews
+                </p>
+              </div>
+            )}
+
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
+              <ReviewForm productId={id || ''} onSubmit={handleReviewSubmit} />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Customer Reviews</h3>
+              {isLoadingReviews ? (
+                <div className="text-center py-8">Loading reviews...</div>
+              ) : (
+                <ReviewList reviews={reviews} />
+              )}
             </div>
           </div>
         </div>
