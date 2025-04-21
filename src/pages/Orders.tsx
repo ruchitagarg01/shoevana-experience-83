@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
-import { useUser } from "@supabase/auth-helpers-react";
-import { supabase } from "@/supabaseClient";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Order {
   id: string;
@@ -10,7 +11,7 @@ interface Order {
 }
 
 const OrdersPage = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {

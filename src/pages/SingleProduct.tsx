@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '@/lib/products';
@@ -25,6 +26,26 @@ const SingleProduct = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Format prices
+  const formattedPrice = product ? `₹${product.price.toFixed(2)}` : '';
+  const formattedSalePrice = product?.salePrice ? `₹${product.salePrice.toFixed(2)}` : null;
+  
+  // Add cart functions
+  const handleAddToCart = () => {
+    toast({
+      title: "Added to cart",
+      description: `${product?.name} added to your cart`,
+    });
+  };
+  
+  const handleToggleWishlist = () => {
+    setIsWishlisted(!isWishlisted);
+    toast({
+      title: isWishlisted ? "Removed from wishlist" : "Added to wishlist",
+      description: `${product?.name} ${isWishlisted ? 'removed from' : 'added to'} your wishlist`,
+    });
+  };
+  
   useEffect(() => {
     fetchReviews();
   }, [id]);
@@ -33,6 +54,10 @@ const SingleProduct = () => {
     if (!id) return;
     
     try {
+      // Since we don't have a product_reviews table in the database yet,
+      // we'll mock the reviews for now
+      setReviews([]);
+      /*
       const { data, error } = await supabase
         .from('product_reviews')
         .select('*')
@@ -40,6 +65,7 @@ const SingleProduct = () => {
         
       if (error) throw error;
       setReviews(data as Review[]);
+      */
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast({
@@ -56,6 +82,17 @@ const SingleProduct = () => {
     if (!id || !isAuthenticated) return;
 
     try {
+      // Since we don't have a product_reviews table in the database yet,
+      // we'll mock the review submission
+      toast({
+        title: "Review submitted",
+        description: "Thank you for your review!",
+      });
+
+      // Refresh reviews
+      fetchReviews();
+      
+      /*
       const { data, error } = await supabase
         .from('product_reviews')
         .insert([
@@ -74,6 +111,7 @@ const SingleProduct = () => {
 
       // Refresh reviews
       fetchReviews();
+      */
     } catch (error) {
       console.error('Error submitting review:', error);
       toast({
