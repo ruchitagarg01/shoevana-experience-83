@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '@/lib/products';
-import { ShoppingBag, Heart, Share2, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, ArrowLeft, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
@@ -27,18 +27,6 @@ const SingleProduct = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-        <Button onClick={() => navigate('/browse')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Shop
-        </Button>
-      </div>
-    );
-  }
-
   useEffect(() => {
     const fetchReviews = async () => {
       if (!id) return;
@@ -51,7 +39,7 @@ const SingleProduct = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setReviews(data || []);
+        setReviews(data as Review[] || []);
       } catch (error) {
         console.error('Error fetching reviews:', error);
         toast({
@@ -65,7 +53,19 @@ const SingleProduct = () => {
     };
 
     fetchReviews();
-  }, [id]);
+  }, [id, toast]);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+        <Button onClick={() => navigate('/browse')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Shop
+        </Button>
+      </div>
+    );
+  }
 
   const handleAddToCart = () => {
     const cartItem = {
@@ -94,24 +94,38 @@ const SingleProduct = () => {
   const handleReviewSubmit = async (data: ReviewFormData) => {
     if (!id || !user) return;
 
-    const { error } = await supabase
-      .from('product_reviews')
-      .insert({
-        product_id: id,
-        user_id: user.id,
-        rating: data.rating,
-        review_text: data.review_text,
+    try {
+      const { error } = await supabase
+        .from('product_reviews')
+        .insert({
+          product_id: id,
+          user_id: user.id,
+          rating: data.rating,
+          review_text: data.review_text,
+        });
+
+      if (error) throw error;
+
+      const { data: newReviews } = await supabase
+        .from('product_reviews')
+        .select('*')
+        .eq('product_id', id)
+        .order('created_at', { ascending: false });
+
+      setReviews(newReviews as Review[] || []);
+      
+      toast({
+        title: "Review submitted",
+        description: "Thank you for your feedback!",
       });
-
-    if (error) throw error;
-
-    const { data: newReviews } = await supabase
-      .from('product_reviews')
-      .select('*')
-      .eq('product_id', id)
-      .order('created_at', { ascending: false });
-
-    setReviews(newReviews || []);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit review",
+        variant: "destructive",
+      });
+    }
   };
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
