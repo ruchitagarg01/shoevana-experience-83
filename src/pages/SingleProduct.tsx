@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '@/lib/products';
@@ -26,11 +25,9 @@ const SingleProduct = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Format prices
   const formattedPrice = product ? `₹${product.price.toFixed(2)}` : '';
   const formattedSalePrice = product?.salePrice ? `₹${product.salePrice.toFixed(2)}` : null;
   
-  // Add cart functions
   const handleAddToCart = () => {
     toast({
       title: "Added to cart",
@@ -47,25 +44,23 @@ const SingleProduct = () => {
   };
   
   useEffect(() => {
-    fetchReviews();
+    if (id) {
+      fetchReviews();
+    }
   }, [id]);
 
   const fetchReviews = async () => {
     if (!id) return;
     
     try {
-      // Since we don't have a product_reviews table in the database yet,
-      // we'll mock the reviews for now
-      setReviews([]);
-      /*
       const { data, error } = await supabase
         .from('product_reviews')
         .select('*')
-        .eq('product_id', id);
+        .eq('product_id', id)
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       setReviews(data as Review[]);
-      */
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast({
@@ -82,18 +77,7 @@ const SingleProduct = () => {
     if (!id || !isAuthenticated) return;
 
     try {
-      // Since we don't have a product_reviews table in the database yet,
-      // we'll mock the review submission
-      toast({
-        title: "Review submitted",
-        description: "Thank you for your review!",
-      });
-
-      // Refresh reviews
-      fetchReviews();
-      
-      /*
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('product_reviews')
         .insert([
           {
@@ -109,9 +93,7 @@ const SingleProduct = () => {
         description: "Thank you for your review!",
       });
 
-      // Refresh reviews
       fetchReviews();
-      */
     } catch (error) {
       console.error('Error submitting review:', error);
       toast({
@@ -331,7 +313,10 @@ const SingleProduct = () => {
                 {isAuthenticated ? (
                   <div className="mb-8">
                     <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
-                    <ReviewForm onSubmit={handleSubmitReview} productId={id || ''} />
+                    <ReviewForm 
+                      productId={id || ''} 
+                      onSubmitSuccess={fetchReviews} 
+                    />
                   </div>
                 ) : (
                   <p className="mb-8 text-muted-foreground">

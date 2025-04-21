@@ -5,24 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import type { ReviewFormData } from '@/types/review';
 
 interface ReviewFormProps {
   productId: string;
-  onSubmit: (data: ReviewFormData) => Promise<void>;
+  onSubmitSuccess: () => void;
 }
 
-const ReviewForm = ({ productId, onSubmit }: ReviewFormProps) => {
+const ReviewForm = ({ productId, onSubmitSuccess }: ReviewFormProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       toast({
         title: "Login required",
         description: "Please login to submit a review",
@@ -42,17 +43,30 @@ const ReviewForm = ({ productId, onSubmit }: ReviewFormProps) => {
 
     setIsSubmitting(true);
     try {
-      await onSubmit({ rating, review_text: reviewText });
+      const { error } = await supabase
+        .from('product_reviews')
+        .insert([
+          {
+            product_id: productId,
+            user_id: user.id,
+            rating,
+            review_text: reviewText.trim() || null
+          }
+        ]);
+
+      if (error) throw error;
+
       setRating(0);
       setReviewText('');
       toast({
         title: "Review submitted",
         description: "Thank you for your feedback!",
       });
-    } catch (error) {
+      onSubmitSuccess();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to submit review. Please try again.",
+        description: error.message || "Failed to submit review",
         variant: "destructive",
       });
     } finally {
