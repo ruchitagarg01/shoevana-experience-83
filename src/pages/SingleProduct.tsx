@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '@/lib/products';
 import { ShoppingBag, Heart, Share2, ArrowLeft, Star } from 'lucide-react';
@@ -7,17 +6,84 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
+import type { Review } from '@/types/review';
+import ReviewList from '@/components/Reviews/ReviewList';
+import ReviewForm from '@/components/Reviews/ReviewForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SingleProduct = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const product = getProductById(id || '');
   
   const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
+  useEffect(() => {
+    fetchReviews();
+  }, [id]);
+
+  const fetchReviews = async () => {
+    if (!id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('product_reviews')
+        .select('*')
+        .eq('product_id', id);
+        
+      if (error) throw error;
+      setReviews(data as Review[]);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load reviews",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async (reviewData: { rating: number; review_text: string }) => {
+    if (!id || !isAuthenticated) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('product_reviews')
+        .insert([
+          {
+            product_id: id,
+            ...reviewData,
+          },
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Review submitted",
+        description: "Thank you for your review!",
+      });
+
+      // Refresh reviews
+      fetchReviews();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit review",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -30,39 +96,15 @@ const SingleProduct = () => {
     );
   }
 
-  const handleAddToCart = () => {
-    toast({
-      title: "Added to cart",
-      description: `${product.name} (${selectedColor}) has been added to your cart.`,
-    });
-  };
-
-  const handleToggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    toast({
-      title: isWishlisted ? "Removed from wishlist" : "Added to wishlist",
-      description: `${product.name} has been ${isWishlisted ? "removed from" : "added to"} your wishlist.`,
-    });
-  };
-
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(product.price);
-
-  const formattedSalePrice = product.salePrice
-    ? new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(product.salePrice)
-    : null;
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 md:px-6">
-          {/* Breadcrumb */}
           <div className="mb-6 flex items-center text-sm text-muted-foreground">
             <button onClick={() => navigate(-1)} className="flex items-center hover:text-foreground">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -84,7 +126,6 @@ const SingleProduct = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Product Images */}
             <div className="space-y-4">
               <div className="aspect-square bg-secondary rounded-xl overflow-hidden">
                 <img
@@ -94,7 +135,6 @@ const SingleProduct = () => {
                 />
               </div>
               
-              {/* Image Thumbnails - This would be replaced with multiple images in a real product */}
               <div className="grid grid-cols-4 gap-2">
                 {Array(4).fill(0).map((_, index) => (
                   <div 
@@ -111,7 +151,6 @@ const SingleProduct = () => {
               </div>
             </div>
             
-            {/* Product Details */}
             <div>
               {product.isNew && (
                 <div className="inline-block bg-black text-white px-3 py-1 text-xs font-semibold rounded-full mb-4">
@@ -126,11 +165,17 @@ const SingleProduct = () => {
                   {Array(5).fill(0).map((_, index) => (
                     <Star 
                       key={index} 
-                      className={`h-4 w-4 ${index < 4 ? 'fill-current text-yellow-500' : 'text-gray-300'}`} 
+                      className={`h-4 w-4 ${
+                        index < Math.round(averageRating) 
+                          ? 'fill-current text-yellow-500' 
+                          : 'text-gray-300'
+                      }`} 
                     />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">42 reviews</span>
+                <span className="text-sm text-muted-foreground">
+                  {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+                </span>
               </div>
               
               <div className="mb-6">
@@ -241,6 +286,21 @@ const SingleProduct = () => {
                     Free shipping on all orders over $100. Easy returns within 30 days of purchase.
                   </p>
                 </div>
+              </div>
+              
+              <div className="mt-12 border-t pt-8">
+                <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+                {isAuthenticated ? (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
+                    <ReviewForm onSubmit={handleSubmitReview} productId={id || ''} />
+                  </div>
+                ) : (
+                  <p className="mb-8 text-muted-foreground">
+                    Please <button onClick={() => navigate('/login')} className="text-primary hover:underline">login</button> to write a review.
+                  </p>
+                )}
+                <ReviewList reviews={reviews} />
               </div>
             </div>
           </div>
