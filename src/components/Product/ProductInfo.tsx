@@ -33,13 +33,26 @@ const ProductInfo = ({
 }: ProductInfoProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isInWishlist, toggleWishlist } = useWishlist(id);
+  const { isInWishlist, toggleWishlist, isLoading } = useWishlist(id);
   
   const [selectedColor, setSelectedColor] = useState(colors[0] || '');
   const [quantity, setQuantity] = useState(1);
   
   const formattedPrice = `₹${price.toFixed(2)}`;
   const formattedSalePrice = salePrice ? `₹${salePrice.toFixed(2)}` : null;
+  
+  const handleWishlistClick = () => {
+    try {
+      toggleWishlist();
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      toast({
+        title: "Error",
+        description: "Could not update wishlist. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div>
@@ -138,9 +151,10 @@ const ProductInfo = ({
         </Button>
         <Button 
           size="lg" 
-          variant="outline" 
+          variant="outline"
+          disabled={isLoading}
           className={isInWishlist ? "bg-red-50 text-red-500 border-red-200" : ""}
-          onClick={toggleWishlist}
+          onClick={handleWishlistClick}
         >
           <Heart className={`h-4 w-4 ${isInWishlist ? "fill-current" : ""}`} />
         </Button>

@@ -20,6 +20,13 @@ export const useWishlist = (productId: string) => {
 
   const checkWishlistStatus = async () => {
     try {
+      // Make sure productId exists before querying
+      if (!productId) {
+        setIsInWishlist(false);
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('wishlist')
         .select('*')
@@ -27,10 +34,15 @@ export const useWishlist = (productId: string) => {
         .eq('product_id', productId)
         .maybeSingle();
 
-      if (error) throw error;
-      setIsInWishlist(!!data);
+      if (error) {
+        console.error('Wishlist check error:', error);
+        setIsInWishlist(false);
+      } else {
+        setIsInWishlist(!!data);
+      }
     } catch (error) {
       console.error('Error checking wishlist status:', error);
+      setIsInWishlist(false);
     } finally {
       setIsLoading(false);
     }
@@ -46,8 +58,21 @@ export const useWishlist = (productId: string) => {
       return;
     }
 
+    // Ensure the productId is valid before continuing
+    if (!productId || typeof productId !== 'string') {
+      toast({
+        title: "Error",
+        description: "Invalid product ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      setIsLoading(true);
+      
       if (isInWishlist) {
+        // Remove from wishlist
         const { error } = await supabase
           .from('wishlist')
           .delete()
@@ -55,17 +80,24 @@ export const useWishlist = (productId: string) => {
           .eq('product_id', productId);
 
         if (error) throw error;
+        
         setIsInWishlist(false);
         toast({
           title: "Removed from wishlist",
           description: "Item has been removed from your wishlist",
         });
       } else {
+        // Add to wishlist
+        // Make sure both IDs are strings
         const { error } = await supabase
           .from('wishlist')
-          .insert([{ user_id: user!.id, product_id: productId }]);
+          .insert([{ 
+            user_id: String(user!.id), 
+            product_id: String(productId) 
+          }]);
 
         if (error) throw error;
+        
         setIsInWishlist(true);
         toast({
           title: "Added to wishlist",
@@ -73,11 +105,14 @@ export const useWishlist = (productId: string) => {
         });
       }
     } catch (error: any) {
+      console.error('Wishlist operation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update wishlist",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -39,7 +39,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    toggleWishlist();
+    
+    try {
+      toggleWishlist();
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      toast({
+        title: "Error",
+        description: "Could not update wishlist. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
@@ -86,13 +96,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       <button
         onClick={handleWishlistClick}
+        disabled={isLoading}
         className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
           product.salePrice ? "top-12" : "top-3"
         } ${
           isInWishlist
             ? "bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400"
             : "bg-white/80 text-gray-600 dark:bg-gray-800/80 dark:text-gray-400"
-        } z-10`}
+        } ${isLoading ? "opacity-50 cursor-wait" : ""} z-10`}
         aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
       >
         <Heart
