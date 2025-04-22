@@ -1,19 +1,33 @@
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Package, PackageOpen, Info } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
 interface Order {
   id: string;
   total_amount: number;
   status: string;
   created_at: string;
-  items: {
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
+  items: OrderItem[];
+}
+
+// Supabase order type matches the database schema
+interface SupabaseOrder {
+  id: string;
+  total_amount: number;
+  status: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  user_id: string | null;
+  currency: string | null;
 }
 
 const mockOrders: Order[] = [
@@ -38,6 +52,17 @@ const mockOrders: Order[] = [
   }
 ];
 
+// Mock items data - in a real app, this would come from another table join
+const mockItemsMap: Record<string, OrderItem[]> = {
+  "ORD-001": [
+    { name: "Premium T-Shirt", quantity: 2, price: 1250 },
+    { name: "Designer Jeans", quantity: 1, price: 1249 }
+  ],
+  "ORD-002": [
+    { name: "Leather Jacket", quantity: 1, price: 3999 }
+  ]
+};
+
 const OrdersPage = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>(mockOrders);
@@ -50,14 +75,35 @@ const OrdersPage = () => {
   }, [user]);
 
   const fetchOrders = async () => {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", user?.id)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
 
-    if (error) console.error("Error fetching orders:", error);
-    else setOrders(data);
+      if (error) {
+        console.error("Error fetching orders:", error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        // Transform Supabase data to match our Order interface
+        const transformedOrders: Order[] = data.map((order: SupabaseOrder) => ({
+          id: order.id,
+          total_amount: order.total_amount,
+          status: order.status || "Processing",
+          created_at: order.created_at || new Date().toISOString(),
+          // In a real app, we would fetch items from order_items table
+          // For now, we'll use our mock data or provide empty array
+          items: mockItemsMap[order.id] || []
+        }));
+        
+        setOrders(transformedOrders);
+      }
+    } catch (err) {
+      console.error("Error in fetchOrders:", err);
+    }
   };
 
   return (
