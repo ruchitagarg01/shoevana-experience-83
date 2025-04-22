@@ -36,14 +36,6 @@ const SingleProduct = () => {
     });
   };
   
-  const handleToggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    toast({
-      title: isWishlisted ? "Removed from wishlist" : "Added to wishlist",
-      description: `${product?.name} ${isWishlisted ? 'removed from' : 'added to'} your wishlist`,
-    });
-  };
-  
   useEffect(() => {
     if (id) {
       fetchReviews();
@@ -55,7 +47,7 @@ const SingleProduct = () => {
     
     try {
       const { data, error } = await supabase
-        .from('product_reviews')
+        .from('reviews')
         .select('*')
         .eq('product_id', id)
         .order('created_at', { ascending: false });
@@ -79,7 +71,7 @@ const SingleProduct = () => {
 
     try {
       const { error } = await supabase
-        .from('product_reviews')
+        .from('reviews')
         .insert([
           {
             product_id: id,

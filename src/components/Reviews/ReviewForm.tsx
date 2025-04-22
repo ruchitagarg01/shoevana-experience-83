@@ -44,13 +44,13 @@ const ReviewForm = ({ productId, onSubmitSuccess }: ReviewFormProps) => {
     setIsSubmitting(true);
     try {
       const { error } = await supabase
-        .from('product_reviews')
+        .from('reviews')
         .insert([
           {
             product_id: productId,
             user_id: user.id,
             rating,
-            review_text: reviewText.trim() || null
+            comment: reviewText.trim() || null
           }
         ]);
 
