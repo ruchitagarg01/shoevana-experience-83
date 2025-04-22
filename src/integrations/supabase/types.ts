@@ -39,6 +39,87 @@ export type Database = {
         }
         Relationships: []
       }
+      "ratings and reviews": {
+        Row: {
+          created_at: string | null
+          id: string
+          nickname: string | null
+          product_id: string
+          published: boolean | null
+          rating: number | null
+          review: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nickname?: string | null
+          product_id?: string
+          published?: boolean | null
+          rating?: number | null
+          review?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nickname?: string | null
+          product_id?: string
+          published?: boolean | null
+          rating?: number | null
+          review?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          product_id: string
+          rating: number | null
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          product_id: string
+          rating?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          rating?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      wishlist: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

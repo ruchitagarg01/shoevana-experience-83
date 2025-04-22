@@ -11,6 +11,7 @@ import type { Review } from '@/types/review';
 import ReviewList from '@/components/Reviews/ReviewList';
 import ReviewForm from '@/components/Reviews/ReviewForm';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 const SingleProduct = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,10 +19,10 @@ const SingleProduct = () => {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const product = getProductById(id || '');
+  const { isInWishlist, toggleWishlist } = useWishlist(id || '');
   
   const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -268,10 +269,10 @@ const SingleProduct = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className={isWishlisted ? "bg-red-50 text-red-500 border-red-200" : ""}
-                  onClick={handleToggleWishlist}
+                  className={isInWishlist ? "bg-red-50 text-red-500 border-red-200" : ""}
+                  onClick={toggleWishlist}
                 >
-                  <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+                  <Heart className={`h-4 w-4 ${isInWishlist ? "fill-current" : ""}`} />
                 </Button>
                 <Button size="lg" variant="outline">
                   <Share2 className="h-4 w-4" />

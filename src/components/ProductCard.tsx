@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { ShoppingBag, Heart } from 'lucide-react';
 import { Product } from '@/lib/products';
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from '@/hooks/use-wishlist';
 
 interface ProductCardProps {
   product: Product;
@@ -14,7 +14,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isInWishlist, toggleWishlist } = useWishlist(product.id);
 
   const handleAddToCart = () => {
     // Create cart item from product and add it to cart
@@ -30,15 +30,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
-      duration: 3000,
-    });
-  };
-
-  const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Removed from wishlist" : "Added to wishlist",
-      description: `${product.name} has been ${isFavorite ? "removed from" : "added to"} your wishlist.`,
       duration: 3000,
     });
   };
@@ -84,17 +75,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
       )}
 
       <button
-        onClick={handleToggleFavorite}
+        onClick={toggleWishlist}
         className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
           product.salePrice ? "top-12" : "top-3"
         } ${
-          isFavorite
+          isInWishlist
             ? "bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400"
             : "bg-white/80 text-gray-600 dark:bg-gray-800/80 dark:text-gray-400"
         }`}
       >
         <Heart
-          className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`}
+          className={`h-4 w-4 ${isInWishlist ? "fill-current" : ""}`}
         />
       </button>
 
