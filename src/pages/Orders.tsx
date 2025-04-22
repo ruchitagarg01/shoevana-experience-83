@@ -21,21 +21,21 @@ interface Order {
 const mockOrders: Order[] = [
   {
     id: "ORD-001",
-    total_amount: 2499,
+    total_amount: 339.98,
     status: "Delivered",
     created_at: "2024-04-15T10:00:00Z",
     items: [
-      { name: "Premium T-Shirt", quantity: 2, price: 1250 },
-      { name: "Designer Jeans", quantity: 1, price: 1249 }
+      { name: "Air Cloud Runners", quantity: 1, price: 189.99 },
+      { name: "Street Motion 2", quantity: 1, price: 149.99 }
     ]
   },
   {
     id: "ORD-002",
-    total_amount: 3999,
+    total_amount: 219.99,
     status: "Processing",
     created_at: "2024-04-20T15:30:00Z",
     items: [
-      { name: "Leather Jacket", quantity: 1, price: 3999 }
+      { name: "Elite Performance Pro", quantity: 1, price: 219.99 }
     ]
   }
 ];
@@ -103,13 +103,13 @@ const OrdersPage = () => {
                           <span>
                             {item.name} (x{item.quantity})
                           </span>
-                          <span>₹{item.price}</span>
+                          <span>${item.price.toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span className="font-medium">Total Amount:</span>
-                      <span className="font-semibold">₹{order.total_amount}</span>
+                      <span className="font-semibold">${order.total_amount.toFixed(2)}</span>
                     </div>
                     {/* Return & Exchange Policy Collapsible */}
                     <div className="mt-2">
@@ -124,7 +124,7 @@ const OrdersPage = () => {
                           </h4>
                           <ul className="list-disc pl-5 space-y-2">
                             <li>Returns are accepted within 30 days of delivery</li>
-                            <li>Item must be unused and in original packaging</li>
+                            <li>Shoes must be unworn and in original packaging</li>
                             <li>Free returns for size exchanges</li>
                             <li>Refunds will be processed within 5-7 business days</li>
                           </ul>
