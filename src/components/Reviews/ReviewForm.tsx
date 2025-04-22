@@ -47,6 +47,7 @@ const ReviewForm = ({ productId, onSubmitSuccess }: ReviewFormProps) => {
         description: error.message || 'Failed to submit review',
         variant: 'destructive',
       });
+      console.error('Review submission error:', error);
     } finally {
       setIsSubmitting(false);
     }
