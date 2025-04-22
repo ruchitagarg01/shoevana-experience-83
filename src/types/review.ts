@@ -4,11 +4,11 @@ export interface Review {
   product_id: string;
   user_id: string;
   rating: number;
-  review_text: string | null;
+  comment: string | null;
   created_at: string;
 }
 
 export interface ReviewFormData {
   rating: number;
-  review_text: string;
+  comment: string;
 }

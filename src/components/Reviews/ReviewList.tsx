@@ -36,8 +36,8 @@ const ReviewList = ({ reviews }: ReviewListProps) => {
               {new Date(review.created_at).toLocaleDateString()}
             </span>
           </div>
-          {review.review_text && (
-            <p className="text-sm text-foreground">{review.review_text}</p>
+          {review.comment && (
+            <p className="text-sm text-foreground">{review.comment}</p>
           )}
         </div>
       ))}
