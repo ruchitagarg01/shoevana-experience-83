@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import ProductBrowser from "./pages/ProductBrowser";
 import SingleProduct from "./pages/SingleProduct";
 import Cart from "./pages/Cart";
+import WishlistPage from "./pages/Wishlist";
 
 const queryClient = new QueryClient();
 
@@ -30,8 +31,8 @@ const App = () => (
             <Route path="/category/:category" element={<ProductBrowser />} />
             <Route path="/product/:id" element={<SingleProduct />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/track-order" element={<NotFound />} /> {/* Placeholder until we create a tracking page */}
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/track-order" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
