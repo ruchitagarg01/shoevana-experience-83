@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ShoppingBag, Heart, Share2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -185,6 +184,19 @@ const ProductInfo = ({
           </ul>
         </div>
         
+        <div className="border-b pb-4">
+          <h3 className="font-medium mb-2">Shoe Care Tips</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li>Clean regularly with a soft, damp cloth to remove surface dirt.</li>
+            <li>Allow shoes to air dry naturally; avoid direct heat sources.</li>
+            <li>Use a suede brush or cleaner for suede and nubuck materials.</li>
+            <li>Store shoes in a cool, dry place away from sunlight.</li>
+            <li>Rotate between pairs to prolong shoe life and shape.</li>
+            <li>For stubborn stains, use mild soap and water, then let dry fully.</li>
+            <li>Apply a protective spray for extra resistance to water and stains.</li>
+          </ul>
+        </div>
+
         <div>
           <h3 className="font-medium mb-2">Shipping & Returns</h3>
           <p className="text-muted-foreground">
