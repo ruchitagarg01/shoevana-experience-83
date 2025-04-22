@@ -1,11 +1,8 @@
 
 import { useState } from 'react';
-import { Star } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import type { ReviewFormData } from '@/types/review';
 
 interface ReviewFormProps {
@@ -14,60 +11,41 @@ interface ReviewFormProps {
 }
 
 const ReviewForm = ({ productId, onSubmitSuccess }: ReviewFormProps) => {
-  const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [reviewText, setReviewText] = useState('');
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAuthenticated || !user) {
-      toast({
-        title: "Login required",
-        description: "Please login to submit a review",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (rating === 0) {
-      toast({
-        title: "Rating required",
-        description: "Please select a rating before submitting",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
+
     try {
       const { error } = await supabase
         .from('reviews')
         .insert([
           {
             product_id: productId,
-            user_id: user.id,
             rating,
-            comment: reviewText.trim() || null
-          }
+            comment,
+          },
         ]);
 
       if (error) throw error;
 
-      setRating(0);
-      setReviewText('');
       toast({
-        title: "Review submitted",
-        description: "Thank you for your feedback!",
+        title: 'Success',
+        description: 'Your review has been submitted.',
       });
+
+      setRating(5);
+      setComment('');
       onSubmitSuccess();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to submit review",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to submit review',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -77,42 +55,30 @@ const ReviewForm = ({ productId, onSubmitSuccess }: ReviewFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">Rating</label>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              onClick={() => setRating(star)}
-              onMouseEnter={() => setHoverRating(star)}
-              onMouseLeave={() => setHoverRating(0)}
-              className="p-1 hover:scale-110 transition-transform"
-            >
-              <Star
-                className={`h-6 w-6 ${
-                  (hoverRating ? star <= hoverRating : star <= rating)
-                    ? "text-yellow-400 fill-current"
-                    : "text-gray-300"
-                }`}
-              />
-            </button>
+        <label className="block text-sm font-medium mb-1">Rating</label>
+        <select
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value))}
+          className="w-full rounded-md border border-input bg-background px-3 py-2"
+        >
+          {[5, 4, 3, 2, 1].map((value) => (
+            <option key={value} value={value}>
+              {value} Star{value !== 1 ? 's' : ''}
+            </option>
           ))}
-        </div>
+        </select>
       </div>
-      
       <div>
-        <label htmlFor="review" className="block text-sm font-medium mb-2">Review (optional)</label>
-        <Textarea
-          id="review"
-          value={reviewText}
-          onChange={(e) => setReviewText(e.target.value)}
-          placeholder="Share your thoughts about this product..."
-          className="min-h-[100px]"
+        <label className="block text-sm font-medium mb-1">Comment</label>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2"
+          placeholder="Write your review here..."
         />
       </div>
-
-      <Button type="submit" disabled={isSubmitting || rating === 0}>
-        Submit Review
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Submitting...' : 'Submit Review'}
       </Button>
     </form>
   );
